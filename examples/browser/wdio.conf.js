@@ -1,8 +1,13 @@
 // @ts-check 
 const http = require('http');
 const path = require('path');
+const temp = require('temp');
 
 const wdioRunnerScript = require.resolve('webdriverio/build/lib/runner.js');
+
+// Remove .track() if you'd like to keep the workspace and other temporary
+// files after running the tests.
+const temptrack = temp.track();
 
 /**
  * WebdriverIO will execute this current script first to setup the tests,
@@ -183,9 +188,15 @@ exports.config = {
     // resolved to continue.
     //
     // Gets executed once before all workers get launched.
-    onPrepare: function (config, capabilities) {
+    onPrepare: function(config, capabilities) {
+        // Modify process.argv so that the server (which is in the
+        // master process) starts with a temporary directory as the
+        // workspace.
+        const rootDir = temptrack.mkdirSync();
+        process.argv.push('--root-dir', rootDir);
         return require('./src-gen/backend/server')(port, host).then(created => {
-            this.execArgv = [wdioRunnerScript, cliPortKey, created.address().port];
+            this.execArgv = [wdioRunnerScript, cliPortKey, created.address().port,
+                '--theia-root-dir', rootDir];
             this.server = created;
         });
     },
