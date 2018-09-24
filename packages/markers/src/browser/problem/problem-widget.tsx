@@ -81,6 +81,22 @@ export class ProblemWidget extends TreeWidget {
         return 'caption';
     }
 
+    protected renderTailDecorations(node: TreeNode, props: NodeProps) {
+        return <div className='row-button-container'>
+            {this.renderRemoveButton(node)}
+        </div>;
+    }
+
+    protected renderRemoveButton(node: TreeNode): React.ReactNode {
+        return <span className='remove-node' onClick={e => this.remove(node, e)}></span>;
+    }
+
+    protected readonly remove = (node: TreeNode, e: React.MouseEvent<HTMLElement>) => this.doRemove(node, e);
+    protected doRemove(node: TreeNode, e: React.MouseEvent<HTMLElement>) {
+        this.model.removeNode(node);
+        e.stopPropagation();
+    }
+
     protected decorateMarkerNode(node: MarkerNode): React.ReactNode {
         if (ProblemMarker.is(node.marker)) {
             let severityClass: string = '';

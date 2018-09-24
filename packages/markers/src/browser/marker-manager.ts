@@ -160,6 +160,27 @@ export abstract class MarkerManager<D extends object> {
         return oldMarkers;
     }
 
+    removeMarkers(uri: URI, searchFilter: SearchFilter<D>): void {
+        const toRemove = this.findMarkers(searchFilter);
+        const { owner } = searchFilter;
+        const markerCollection = this.uri2MarkerCollection.get(uri.toString());
+        if (markerCollection) {
+            if (owner) {
+                const oldMarkers = markerCollection.findMarkers({ owner });
+                const newMarkers = oldMarkers.filter(marker => {
+                    if (!toRemove.find(toRemoveMarker => marker === toRemoveMarker)) {
+                        return marker;
+                    }
+                });
+                markerCollection.setMarkers(owner, newMarkers.map(newMarker => newMarker.data));
+            } else {
+                const toRemoveMarkerOwner = toRemove[0] && toRemove[0].owner;
+                markerCollection.setMarkers(toRemoveMarkerOwner, []);
+            }
+            this.fireOnDidChangeMarkers(uri);
+        }
+    }
+
     /*
      * returns all markers that satisfy the given filter.
      */
